@@ -1,13 +1,15 @@
-package ru.salauyou.linkedtable;
+package ru.salauyou.tableimpl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import ru.salauyou.table.Cell;
 import ru.salauyou.table.Line;
@@ -16,7 +18,7 @@ import ru.salauyou.table.WrongSizeException;
 
 
 
-public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
+public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Serializable {
 	
 	private static final long serialVersionUID = 6939482161443314381L;
 
@@ -42,23 +44,26 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	 * with given number of rows and columns
 	 */
 	public LinkedTable(int rows, int columns) {
-		List<V> empty = new ArrayList<>();
-		for (int i = 0; i < columns; i++) {
-			empty.add(null);
-		}
-		for (int i = 0; i < rows; i++) {
-			this.addRow(empty);
-		}
+		this(rows, columns, null);
 	}
 	
+	
+	public LinkedTable(int rows, int columns, V defaultValue) {
+		List<V> one = Arrays.asList(defaultValue);
+		for (int i = 0; i < columns; i++)
+			addColumn(one);
+		for (int i = 1; i < rows; i++) {
+			addRow(null, getRow(0));
+		}
+	}
 	
 	
 	/**
 	 * Creates empty (cell values filled with nulls) <tt>LinkedTable</tt> 
 	 * which have rows and columns defined by key collections
 	 */
-	public LinkedTable(Collection<? extends R> rowKeys, Collection<? extends C> columnKeys) {
-		this(rowKeys.size(), columnKeys.size());
+	public LinkedTable(Collection<? extends R> rowKeys, Collection<? extends C> columnKeys, V defaultValue) {
+		this(rowKeys.size(), columnKeys.size(), defaultValue);
 		int i = 0;
 		for (R key : rowKeys) {
 			setRowKey(i++, key);
@@ -85,14 +90,25 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	
 	
 	
+	//=============== row and column accessors and mutators ==============//
+	
+	
 	@Override
 	public Line<R, V> getRow(R key) throws NoSuchElementException {
 		checkKey(key, true);
 		return rowMap.get(key);
 	}
 	
+
 	
-	
+	@Override
+	public Line<C, V> getColumn(C key) throws NoSuchElementException {
+		checkKey(key, false);
+		return colMap.get(key);
+	}
+
+
+
 	@Override
 	public Line<R, V> getRow(int index) throws NoSuchElementException {
 		checkIndex(index, true);
@@ -102,27 +118,390 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	
 	
 	@Override
+	public Line<C, V> getColumn(int index) throws NoSuchElementException {
+		checkIndex(index, false);
+		return cols.get(index);
+	}
+
+
+
+	@Override
 	public Table<R, C, V> addRow(Collection<? extends V> row) throws WrongSizeException {
+		if (row != null && row.size() != 0)
+			checkSize(row.size(), true);
 		return addRow(null, row);
 	}
 	
 	
 	
 	@Override
+	public Table<R, C, V> addColumn(Collection<? extends V> column) throws WrongSizeException {
+		if (column != null && column.size() != 0)
+			checkSize(column.size(), false);
+		return addColumn(null, column);
+	}
+
+
+
+	@Override
 	public Table<R, C, V> addRow(R key, Collection<? extends V> row)
 									   throws IllegalArgumentException, WrongSizeException {
-		checkSize(row, true);
+		if (row != null && row.size() != 0)
+			checkSize(row.size(), true);
 		checkKeyNotDuplicate(key, true);
-		insertLine(rows.size(), key, row, true);
+		insertLine(rows.size(), key, row == null ? null : row.iterator(), 
+				   row == null ? 0 : row.size(), true);
 		return this;
 	}
 	
 	
 	
-	@SuppressWarnings("unchecked")
-	void insertLine(int index, Object key, Collection<? extends V> line, boolean isRow) {
+	@Override
+	public Table<R, C, V> addColumn(C key, Collection<? extends V> column)
+									throws IllegalArgumentException, WrongSizeException {
+		if (column != null && column.size() != 0)
+			checkSize(column.size(), false);
+		checkKeyNotDuplicate(key, false);
+		insertLine(cols.size(), key, column == null ? null : column.iterator(), 
+				   column == null ? 0 : column.size(), false);
+		return this;
+	}
+
+
+
+	@Override
+	public Table<R, C, V> addRow(R key, Line<? extends R, ? extends V> row)
+										throws IllegalArgumentException,
+											       WrongSizeException {
+		if (row != null && row.size() != 0)
+			checkSize(row.size(), true);
+		checkKeyNotDuplicate(key, true);
+		insertLine(rows.size(), key, row == null ? null : cellValueIterator(row), 
+				   row == null ? 0 : row.size(), true);
+		return this;
+	}
+	
+	
+	
+	@Override
+	public Table<R, C, V> addColumn(C key, Line<? extends C, ? extends V> column)
+											throws IllegalArgumentException,
+											       WrongSizeException {
+		if (column != null && column.size() != 0)
+			checkSize(column.size(), false);
+		checkKeyNotDuplicate(key, false);
+		insertLine(cols.size(), key, column == null ? null : cellValueIterator(column), 
+				   column == null ? 0 : column.size(), false);
+		return this;
+	}
+
+
+
+	@Override
+	public Table<R, C, V> insertRow(int index, Collection<? extends V> row)
+										throws NoSuchElementException, WrongSizeException {
+		if (row != null && row.size() != 0)
+			checkSize(row.size(), true);
+		insertLine(index, null, row == null ? null : row.iterator(), 
+				   row == null ? 0 : row.size(), true);
+		return this;
+	}
+
+
+
+	@Override
+	public Table<R, C, V> insertColumn(int index, Collection<? extends V> column)
+									throws NoSuchElementException, WrongSizeException {
+		if (column != null && column.size() != 0)
+			checkSize(column.size(), false);
+		insertLine(index, null, column == null ? null : column.iterator(), 
+				   column == null ? 0 : column.size(), false);
+		return this;
+	}
+
+
+
+	@Override
+	public Table<R, C, V> insertRow(int index, R key, Collection<? extends V> row) 
+										throws IllegalArgumentException, NoSuchElementException, 
+											   WrongSizeException {
+		if (row != null && row.size() != 0)
+			checkSize(row.size(), true);
+		checkKeyNotDuplicate(key, true);
+		insertLine(index, key, row == null ? null : row.iterator(), 
+				   row == null ? 0 : row.size(), true);
+		return this;
+	}
 		
-		boolean lineEmpty = (line == null || line.size() == 0);
+
+		
+	@Override
+	public Table<R, C, V> insertColumn(int index, C key, Collection<? extends V> column) 
+									throws IllegalArgumentException, NoSuchElementException, 
+										   WrongSizeException {
+		if (column != null && column.size() != 0)
+			checkSize(column.size(), false);
+		checkKeyNotDuplicate(key, false);
+		insertLine(index, key, column == null ? null : column.iterator(), 
+				   column == null ? 0 : column.size(), false);
+		return this;
+	}
+
+
+
+	@Override
+	public Table<R, C, V> insertRow(int index, R key, Line<? extends R, ? extends V> row)
+											throws IllegalArgumentException,
+											       NoSuchElementException,
+											       WrongSizeException {
+		if (row != null && row.size() != 0)
+			checkSize(row.size(), true);
+		checkKeyNotDuplicate(key, true);
+		insertLine(index, key, row == null ? null : cellValueIterator(row), 
+				   row == null ? 0 : row.size(), true);
+		return this;
+	}	
+	
+
+	
+	@Override
+	public Table<R, C, V> insertColumn(int index, C key, Line<? extends C, ? extends V> column)
+											throws IllegalArgumentException,
+											       NoSuchElementException,
+											       WrongSizeException {
+		if (column != null && column.size() != 0)
+			checkSize(column.size(), false);
+		checkKeyNotDuplicate(key, false);
+		insertLine(index, key, column == null ? null : cellValueIterator(column), 
+				   column == null ? 0 : column.size(), false);
+		return this;
+	}
+
+
+
+	@Override
+	public List<V> removeRow(R key) throws NoSuchElementException {
+		checkKey(key, true);
+		int index = indexForKey(key, true);
+		return removeAndReturn(index, true);
+	}
+	
+	
+	
+	@Override
+	public List<V> removeColumn(C key) throws NoSuchElementException {
+		checkKey(key, false);
+		int index = indexForKey(key, false);
+		return removeAndReturn(index, false);
+	}
+
+
+
+	@Override
+	public List<V> removeRow(int index) throws NoSuchElementException {
+		checkIndex(index, true);			
+		return removeAndReturn(index, true);
+	}
+	
+	
+	
+	@Override
+	public List<V> removeColumn(int index) throws NoSuchElementException {
+		checkIndex(index, false);
+		return removeAndReturn(index, false);
+	}
+
+
+
+	@Override
+	public List<V> removeLastRow() throws NoSuchElementException {
+		return removeRow(rows.size() - 1);
+	}
+
+
+
+	@Override
+	public List<V> removeLastColumn() throws NoSuchElementException {
+		return removeColumn(cols.size() - 1);
+	}
+
+
+
+	@Override
+	public List<V> removeFirstRow() throws NoSuchElementException {
+		return removeRow(0);
+	}
+	
+	
+	
+	@Override
+	public List<V> removeFirstColumn() throws NoSuchElementException {
+		return removeColumn(0);
+	}
+
+
+
+	@Override
+	public boolean containsRow(R key) {
+		return key != null && rowMap != null && rowMap.containsKey(key);
+	}
+
+
+
+	@Override
+	public boolean containsColumn(C key) {
+		return key != null && colMap != null && colMap.containsKey(key);
+	}
+
+
+
+	@Override
+	public int getRowIndex(R key) {
+		return indexForKey(key, true);
+	}
+
+
+
+	@Override
+	public int getColumnIndex(C key) {
+		return indexForKey(key, false);
+	}
+
+
+
+	@Override
+	public R getRowKey(int index) throws NoSuchElementException {
+		checkIndex(index, true);
+		return rows.get(index).key;
+	}
+
+
+
+	@Override
+	public C getColumnKey(int index) throws NoSuchElementException {
+		checkIndex(index, false);
+		return cols.get(index).key;
+	}
+
+
+
+	@Override
+	public R setRowKey(int index, R key) throws NoSuchElementException, 
+	                                            IllegalArgumentException {
+		checkIndex(index, true);
+		LinkedLine<R, V> row = rows.get(index);
+		if (Objects.equals(row.key, key))
+			return key;
+		checkKeyNotDuplicate(key, true);
+		R oldKey = row.key;
+		row.key = key;
+		if (rowMap != null) 
+			rowMap.remove(oldKey);
+		getRowMap().put(key, row);
+		return oldKey;
+	}
+
+
+
+	@Override
+	public C setColumnKey(int index, C key) throws NoSuchElementException {
+		checkIndex(index, false);
+		LinkedLine<C, V> col = cols.get(index);
+		if (Objects.equals(col.key, key))
+			return key;
+		checkKeyNotDuplicate(key, false);
+		C oldKey = col.key;
+		col.key = key;
+		if (colMap != null)
+			colMap.remove(oldKey);
+		getColMap().put(key, col);
+		return oldKey;
+	}
+
+
+
+	@Override
+	public void setRowKey(R oldKey, R newKey) throws NoSuchElementException {
+		checkKey(oldKey, true);
+		if (oldKey.equals(newKey))
+			return;
+		
+		LinkedLine<R, V> row = rowMap.get(oldKey);
+		rowMap.remove(oldKey);
+		row.key = newKey;
+		if (newKey != null)
+			rowMap.put(newKey, row);
+	}
+	
+	
+
+	@Override
+	public void setColumnKey(C oldKey, C newKey) throws NoSuchElementException {
+		checkKey(oldKey, false);
+		if (oldKey.equals(newKey))
+			return;
+		LinkedLine<C, V> col = colMap.get(oldKey);
+		colMap.remove(oldKey);
+		col.key = newKey;
+		if (newKey != null)
+			colMap.put(newKey, col);
+	}
+	
+	
+	
+	
+	// random access methods
+	
+	
+	@Override
+	public Cell<V> getCell(int row, int column) throws NoSuchElementException {
+		checkIndex(row, true);
+		checkIndex(column, false);
+		// TODO implement
+		return null;
+	}
+
+
+
+	@Override
+	public Cell<V> getCell(R rowKey, C columnKey) throws NoSuchElementException {
+		checkKey(rowKey, true);
+		checkKey(columnKey, false);
+		// TODO implement
+		return null;
+	}
+	
+	
+	
+	
+	// inner checking methods
+	
+	
+	private void checkKeyNotDuplicate(Object key, boolean isRow) throws IllegalArgumentException {
+		if (key == null)
+			return;
+		if ((isRow && rowMap != null && rowMap.containsKey(key)) 
+				|| (!isRow && colMap != null && colMap.containsKey(key))) 
+			throw new IllegalArgumentException("Key {" + key + "} already exists");
+	}
+	
+	
+	private void checkSize(int size, boolean isRow) throws WrongSizeException {
+		if (isRow && cols.size() > 0 && size != cols.size())
+			throw new WrongSizeException(cols.size(), size);
+		if (!isRow && rows.size() > 0 && size != rows.size())
+			throw new WrongSizeException(rows.size(), size);
+	}
+	
+	
+	
+	// inserts row or column in given position and assigns a key
+	// Cost is always O(k + m)
+	
+	@SuppressWarnings("unchecked")
+	void insertLine(int index, Object key, Iterator<? extends V> line, int lineSize, boolean isRow) {
+		
+		boolean lineEmpty = (line == null || lineSize == 0);
 		boolean tableEmpty = rows.size() == 0;		
 		
 		if (tableEmpty && lineEmpty)	// empty line is inserted into empty table
@@ -134,7 +513,7 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 		if (!isRow && index > cols.size())
 			index = cols.size();
 		
-		int size = lineEmpty ? (isRow ? cols.size() : rows.size()) : line.size();
+		int size = lineEmpty ? (isRow ? cols.size() : rows.size()) : lineSize;
 		
 		// new line
 		LinkedLine<?, V> newLine = new LinkedLine<>(isRow == true ? LineType.ROW : LineType.COLUMN, 
@@ -160,7 +539,7 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	    }
 	    
 	    // iterator to get cell values
-	    Iterator<? extends V> iv = lineEmpty ? null : line.iterator();
+	    Iterator<? extends V> iv = lineEmpty ? null : line;
 	    
 	    // main loop
 	    for (int i = 0; i < size; i++) {
@@ -186,6 +565,7 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	    			left.f = n;
 	    		left = left == null ? null : left.d;
 	    		right = right == null ? null : right.d;
+	    		prev = n;
 	    	}
 	    	
 	    	if (i == 0)
@@ -216,12 +596,12 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	    
 	    // add row/column to main list
 	    if (isRow) {
-	    	if (lineLast)
+	    	if (!lineLast)
 	    		rows.add(index, (LinkedLine<R, V>) newLine);
 	    	else
 	    		rows.add((LinkedLine<R, V>) newLine);
 	    } else {
-	    	if (lineLast)
+	    	if (!lineLast)
 	    		cols.add(index, (LinkedLine<C, V>) newLine);
 	    	else
 	    		cols.add((LinkedLine<C, V>) newLine);
@@ -236,176 +616,17 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	
 	
 	
-	@Override
-	public List<V> removeRow(R key) throws NoSuchElementException {
-		checkKey(key, true);
-		int index = indexForKey(key, true);
-		rowMap.remove(key);
-		return removeAndReturn(index, true);
-	}
-	
-	
-	
-	@Override
-	public List<V> removeRow(int index) throws NoSuchElementException {
-		checkIndex(index, true);			
-		LinkedLine<R, V> row = rows.get(index);		// row to remove
-		if (row.key != null) {						// remove key association
-			rowMap.remove(row.key);
-		}
-		return removeAndReturn(index, true);
-	}
-	
-	
-	
-	@Override
-	public boolean containsRow(R key) {
-		return rowMap != null && rowMap.containsKey(key);
-	}
-
-
-
-	@Override
-	public int getRowIndex(R key) {
-		return indexForKey(key, true);
-	}
-
-
-
-	@Override
-	public R getRowKey(int index) throws NoSuchElementException {
-		checkIndex(index, true);
-		return rows.get(index).key;
-	}
-
-
-
-	@Override
-	public R setRowKey(int index, R key) throws NoSuchElementException, 
-	                                            IllegalArgumentException {
-		checkIndex(index, true);
-		LinkedLine<R, V> row = rows.get(index);
-		if (row.key != null && row.key.equals(key))
-			return key;
-		checkKeyNotDuplicate(key, true);
-		R oldKey = row.key;
-		row.key = key;
-		if (rowMap != null) 
-			rowMap.remove(oldKey);
-		getRowMap().put(key, row);
-		return oldKey;
-	}
-
-
-
-	@Override
-	public void setRowKey(R oldKey, R newKey) throws NoSuchElementException {
-		checkKey(oldKey, true);
-		if (oldKey.equals(newKey))
-			return;
-		
-		LinkedLine<R, V> row = rowMap.get(oldKey);
-		rowMap.remove(oldKey);
-		row.key = newKey;
-		rowMap.put(newKey, row);
-	}
-	
-	
-
-	
-	@Override
-	public Line<C, V> getColumn(C key) throws NoSuchElementException {
-		checkKey(key, false);
-		return colMap.get(key);
-	}
-	
-	
-	
-	@Override
-	public Line<C, V> getColumn(int index) throws NoSuchElementException {
-		checkIndex(index, false);
-		return cols.get(index);
-	}
-	
-
-	
-	@Override
-	public List<V> removeColumn(C key) throws NoSuchElementException {
-		checkKey(key, false);
-		int index = indexForKey(key, false);
-		colMap.remove(key);
-		return removeAndReturn(index, false);
-	}
-	
-	
-	
-	@Override
-	public List<V> removeColumn(int index) throws NoSuchElementException {
-		checkIndex(index, false);
-		LinkedLine<C, V> column = cols.get(index);	// column to remove
-		if (colMap != null && column.key != null) { // remove key association
-			colMap.remove(column.key);
-		}
-		return removeAndReturn(index, false);
-	}
-	
-	
-	
-	
-	// inner checking methods
-	
-	private void checkIndex(int index, boolean isRow) throws NoSuchElementException {
-		if (index < 0 || (isRow && index >= rows.size()) 
-				|| (!isRow && index >= cols.size()))
-			throw new NoSuchElementException (
-					String.format("Out of bounds: index=%d, %s=%d",
-							index, 
-							isRow ? "rows" : "columns", 
-							isRow ? rows.size() : cols.size()
-							));
-	}
-	
-	
-	
-	private void checkKey(Object key, boolean isRow) throws NoSuchElementException {
-		if (key == null)
-			throw new NoSuchElementException("Null keys are not allowed");
-		if ((isRow && (rowMap == null || !rowMap.containsKey(key))) 
-				|| (!isRow && (colMap == null || !colMap.containsKey(key)))) 
-			throw new NoSuchElementException("Key {" + key + "} doesn't exist");
-	}
-	
-	
-	
-	private void checkKeyNotDuplicate(Object key, boolean isRow) throws IllegalArgumentException {
-		if (key == null)
-			return;
-		if ((isRow && rowMap != null && rowMap.containsKey(key)) 
-				|| (!isRow && colMap != null && colMap.containsKey(key))) 
-			throw new IllegalArgumentException("Key {" + key + "} already exists");
-	}
-	
-	
-	private void checkSize(Collection<? extends V> line, boolean isRow) throws WrongSizeException {
-		if (isRow && cols.size() > 0 && line.size() != cols.size())
-			throw new WrongSizeException(cols.size(), line.size());
-		if (!isRow && rows.size() > 0 && line.size() != rows.size())
-			throw new WrongSizeException(rows.size(), line.size());
-	}
-	
-	
-	
-	
-	// Removes row or column by given index. 
-	// Cost is always O(k)
+	// Removes row or column by given index and removes key association 
+	// Cost is always O(k + m)
 	
 	private List<V> removeAndReturn(int index, boolean isRow) {
 		
 		List<V> old = new ArrayList<>(isRow ? cols.size() : rows.size());
 		
 		boolean first = index == 0;
-		boolean last = index == ((isRow ? rows.size() : cols.size()) - 1);		
-		LinkedCell<V> n = isRow ? rows.get(index).first : cols.get(index).first;
+		boolean last = index == ((isRow ? rows.size() : cols.size()) - 1);
+		LinkedLine<?, V> line = isRow ? rows.get(index) : cols.get(index);
+		LinkedCell<V> n = line.first;
 		
 		if (first && last) {				// only one line exists
 			while (n != null) {
@@ -426,7 +647,7 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 			rowMap.clear();
 			colMap.clear();
 			
-		} else {   							// more than one bar exist
+		} else {   							// more than one line exist
 			for (int i = 0; i < (isRow ? cols.size() : rows.size()); i++) {		
 				old.add(n.get());
 				
@@ -464,6 +685,15 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 				cols.remove(index);
 		}
 		
+		// remove key association
+		if (isRow) {
+			if (rowMap != null && line.key != null)
+				rowMap.remove(line.key);
+		} else {
+			if (colMap != null && line.key != null)
+				colMap.remove(line.key);
+		}
+		
 		return old;
 	}
 	
@@ -471,7 +701,7 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	
 	// Search for index by provided key. 
 	// Cost: O(1) if lines weren't rearranged by insertion or deletion
-	//       O(k) in other case of significant rearrange
+	//       O(k)/O(m) if rows/columns were rearranged
 	
 	int indexForKey(Object key, boolean isRow) {
 		LinkedLine<?, V> line = isRow ? rowMap.get(key) : colMap.get(key);
@@ -511,7 +741,9 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	}
 	
 	
-	// key maps lazy initializers 
+	
+	
+	// key map lazy initializers 
 	
 	Map<R, LinkedLine<R, V>> getRowMap() {
 		if (rowMap == null)
@@ -525,21 +757,6 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 		return colMap;
 	}
 	
-	
-	
-	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder("Rows: "+ rows.size());
-		for (LinkedLine<R, V> row : rows) {
-			sb.append("\n").append(row);
-		}
-		sb.append("\nColumns: " + cols.size());
-		for (LinkedLine<C, V> col : cols) {
-			sb.append("\n").append(col);
-		}
-		return sb.toString();
-	}
 	
 	
 	
@@ -660,7 +877,7 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	
 
 	
-	/** ================== nested classes ==================== **/
+	// ================== nested classes ==================== //
 	
 	
 	
@@ -668,7 +885,7 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 	
 	
 	/** Represents a single row or column */
-	static class LinkedLine<K, V> implements Line<K, V>, Serializable {
+	static class LinkedLine<K, V> extends AbstractLine<K, V> implements Serializable {
 		
 		private static final long serialVersionUID = -2644441702340616775L;
 		
@@ -677,11 +894,11 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 		LineType type;
 		K key;
 		int weakIndex;
-		LinkedTable table;
+		LinkedTable<?, ?, V> table;
 		
 		
 		LinkedLine(LineType type, LinkedCell<V> first, LinkedCell<V> last, K key, 
-				   int weakIndex, LinkedTable table) {
+				   int weakIndex, LinkedTable<?, ?, V> table) {
 			this.first = first;
 			this.last = last;
 			this.type = type;
@@ -846,159 +1063,5 @@ public class LinkedTable<R, C, V> implements Table<R, C, V>, Serializable {
 					              value
 					              );
 		}
-	}
-
-
-
-	@Override
-	public Table<R, C, V> insertRow(int index, Collection<? extends V> row)
-			throws NoSuchElementException, WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public Table<R, C, V> insertRow(int index, R key,
-			Collection<? extends V> row) throws IllegalArgumentException,
-			NoSuchElementException, WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	
-
-
-
-	@Override
-	public Table<R, C, V> addColumn(Collection<? extends V> column)
-			throws WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public Table<R, C, V> addColumn(C key, Collection<? extends V> column)
-			throws IllegalArgumentException, WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public Table<R, C, V> insertColumn(int index, Collection<? extends V> row)
-			throws NoSuchElementException, WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public Table<R, C, V> insertColumn(int index, C key,
-			Collection<? extends V> column) throws IllegalArgumentException,
-			NoSuchElementException, WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public boolean containsColumn(C key) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-
-
-	@Override
-	public int getColumnIndex(C key) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-
-
-	@Override
-	public C getColumnKey(int index) throws NoSuchElementException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public C setColumnKey(int index, C key) throws NoSuchElementException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public void setColumnKey(C oldKey, C newKey) throws NoSuchElementException {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-
-	@Override
-	public Cell<V> getCell(int row, int column) throws NoSuchElementException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
-	@Override
-	public Cell<V> getCell(R rowKey, C columnKey) throws NoSuchElementException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-
-	@Override
-	public Table<R, C, V> addRow(R key, Line<? extends R, ? extends V> row)
-			throws IllegalArgumentException, WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public Table<R, C, V> insertRow(int index, R key,
-			Line<? extends R, ? extends V> row)
-			throws IllegalArgumentException, NoSuchElementException,
-			WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public Table<R, C, V> addColumn(C key, Line<? extends C, ? extends V> column)
-			throws IllegalArgumentException, WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public Table<R, C, V> insertColumn(int index, C key,
-			Line<? extends C, ? extends V> column)
-			throws IllegalArgumentException, NoSuchElementException,
-			WrongSizeException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	 */
+	}	
 }

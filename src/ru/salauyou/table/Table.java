@@ -1,18 +1,11 @@
 package ru.salauyou.table;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 
 /**
@@ -85,12 +78,9 @@ public interface Table<R, C, V> {
 	 * @throws IllegalArgumentException if row with given key already exists
 	 * @throws WrongSizeException       if size of row doesn't fit table
 	 */
-	public default Table<R, C, V> addRow(R key, Line<? extends R, ? extends V> row)
+	public Table<R, C, V> addRow(R key, Line<? extends R, ? extends V> row)
 										throws IllegalArgumentException,
-										       WrongSizeException {
-		addRow(key, row.toList());
-		return this;
-	}
+										       WrongSizeException;
 	
 	
 	/**
@@ -130,13 +120,10 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if <tt>index < 0</tt>
 	 * @throws WrongSizeException		if size of passed row doesn't fit table
 	 */
-	public default Table<R, C, V> insertRow(int index, R key, Line<? extends R, ? extends V> row)
+	public Table<R, C, V> insertRow(int index, R key, Line<? extends R, ? extends V> row)
 										throws IllegalArgumentException,
 										       NoSuchElementException,
-										       WrongSizeException {
-		insertRow(index, key, row.toList());
-		return this;
-	}
+										       WrongSizeException;
 
 	
 	/**
@@ -145,23 +132,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if row with given index doesn't exist
 	 * @throws WrongSizeException	    if size of passed row doesn't fit table
 	 */
-	public default List<V> replaceRow(int index, Collection<? extends V> row) 
+	public List<V> replaceRow(int index, Collection<? extends V> row) 
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsRow(index))
-			throw new NoSuchElementException();
-		Line<R, V> rw = getRow(index);
-		if (row.size() != rw.size())
-			throw new WrongSizeException(rw.size(), row.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<? extends V> i = row.iterator();
-		for (Cell<V> c : rw.cells()) {
-			old.add(c.get());
-			c.set(i.next());
-		}
-		return old;
-	}
+												WrongSizeException;
 	
 	
 	/**
@@ -170,23 +143,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if row with given key doesn't exist
 	 * @throws WrongSizeException	    if size of passed row doesn't fit table
 	 */
-	public default List<V> replaceRow(R key, Collection<? extends V> row)
+	public List<V> replaceRow(R key, Collection<? extends V> row)
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsRow(key))
-			throw new NoSuchElementException();
-		Line<R, V> rw = getRow(key);
-		if (row.size() != rw.size())
-			throw new WrongSizeException(rw.size(), row.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<? extends V> i = row.iterator();
-		for (Cell<V> c : rw.cells()) {
-			old.add(c.get());
-			c.set(i.next());
-		}
-		return old;
-	}
+												WrongSizeException;
 	
 	
 	/**
@@ -196,26 +155,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if column with given index doesn't exist
 	 * @throws WrongSizeException	    if size of passed column doesn't fit table
 	 */
-	public default List<V> replaceRow(int index, Line<? extends R, ? extends V> row) 
+	public List<V> replaceRow(int index, Line<? extends R, ? extends V> row) 
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsRow(index))   
-			throw new NoSuchElementException();
-		Line<R, V> rw = getRow(index);
-		if (row == rw)
-			return rw.toList();
-		if (row.size() != rw.size())
-			throw new WrongSizeException(rw.size(), row.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<Cell<V>> ci = rw.cells().iterator();
-		for (Cell<? extends V> c : row.cells()) {
-			Cell<V> cell = ci.next();
-			old.add(cell.get());
-			cell.set(c.get());
-		}
-		return old;
-	}
+												WrongSizeException;
 
 	
 	/**
@@ -225,26 +167,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if row with given index doesn't exist
 	 * @throws WrongSizeException	    if size of passed row doesn't fit table
 	 */
-	public default List<V> replaceRow(R key, Line<? extends R, ? extends V> row) 
+	public List<V> replaceRow(R key, Line<? extends R, ? extends V> row) 
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsRow(key))   
-			throw new NoSuchElementException();
-		Line<R, V> rw = getRow(key);
-		if (row == rw)
-			return rw.toList();
-		if (row.size() != rw.size())
-			throw new WrongSizeException(rw.size(), row.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<Cell<V>> ci = rw.cells().iterator();
-		for (Cell<? extends V> c : row.cells()) {
-			Cell<V> cell = ci.next();
-			old.add(cell.get());
-			cell.set(c.get());
-		}
-		return old;
-	}
+												WrongSizeException;
 	
 	
 	/**
@@ -265,17 +190,20 @@ public interface Table<R, C, V> {
 	 * Removes the last row and returns its items
 	 * @throws NoSuchElementException if table is empty
 	 */
-	public default List<V> removeLastRow() throws NoSuchElementException {
-		return removeRow(rowNumber() - 1);
-	}
+	public List<V> removeLastRow() throws NoSuchElementException;
+	
+	
+	/**
+	 * Removes the first row and returns its items
+	 * @throws NoSuchElementException if table is empty
+	 */
+	public List<V> removeFirstRow() throws NoSuchElementException;
 	
 	
 	/**
 	 * Returns if table contains row with given index
 	 */
-	public default boolean containsRow(int index) {
-		return index >= 0 && index < rowNumber();
-	}
+	public boolean containsRow(int index);
 	
 	
 	/**
@@ -294,11 +222,7 @@ public interface Table<R, C, V> {
 	 * Returns key for given row index or null if undefined
 	 * @throws NoSuchElementException if <tt>index < 0 || index >= this.rowNumber()</tt>
 	 */
-	public default R getRowKey(int index) throws NoSuchElementException {
-		if (!containsRow(index))
-			throw new NoSuchElementException();
-		return getRowKey(index);
-	}
+	public R getRowKey(int index) throws NoSuchElementException;
 		
 	
 	/**
@@ -364,12 +288,9 @@ public interface Table<R, C, V> {
 	 * @throws IllegalArgumentException if column with given key already exists
 	 * @throws WrongSizeException       if size of column doesn't fit table
 	 */
-	public default Table<R, C, V> addColumn(C key, Line<? extends C, ? extends V> column)
+	public Table<R, C, V> addColumn(C key, Line<? extends C, ? extends V> column)
 										throws IllegalArgumentException,
-										       WrongSizeException {
-		addColumn(key, column.toList());
-		return this;
-	}
+										       WrongSizeException;
 	
 	
 	/**
@@ -380,7 +301,7 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if <tt>index < 0</tt>
 	 * @throws WrongSizeException	    if size of passed column doesn't fit table
 	 */
-	public Table<R, C, V> insertColumn(int index, Collection<? extends V> row) 
+	public Table<R, C, V> insertColumn(int index, Collection<? extends V> column) 
 			                        	throws	NoSuchElementException,
 			                        			WrongSizeException;
 	
@@ -409,13 +330,10 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if <tt>index < 0</tt>
 	 * @throws WrongSizeException		if size of passed row doesn't fit table
 	 */
-	public default Table<R, C, V> insertColumn(int index, C key, Line<? extends C, ? extends V> column)
+	public Table<R, C, V> insertColumn(int index, C key, Line<? extends C, ? extends V> column)
 										throws IllegalArgumentException,
 										       NoSuchElementException,
-										       WrongSizeException {
-		insertColumn(index, key, column.toList());
-		return this;
-	}
+										       WrongSizeException;
 	
 
 	/**
@@ -424,23 +342,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if column with given index doesn't exist
 	 * @throws WrongSizeException	    if size of passed column doesn't fit table
 	 */
-	public default List<V> replaceColumn(int index, Collection<? extends V> column) 
+	public List<V> replaceColumn(int index, Collection<? extends V> column) 
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsColumn(index))
-			throw new NoSuchElementException();
-		Line<C, V> col = getColumn(index);
-		if (column.size() != col.size())
-			throw new WrongSizeException(col.size(), column.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<? extends V> i = column.iterator();
-		for (Cell<V> c : col.cells()) {
-			old.add(c.get());
-			c.set(i.next());
-		}
-		return old;
-	}
+												WrongSizeException;
 	
 	
 	/**
@@ -449,23 +353,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if column with given key doesn't exist
 	 * @throws WrongSizeException	    if size of passed column doesn't fit table
 	 */
-	public default List<V> replaceColumn(C key, Collection<? extends V> column)
+	public List<V> replaceColumn(C key, Collection<? extends V> column)
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsColumn(key))
-			throw new NoSuchElementException();
-		Line<C, V> col = getColumn(key);
-		if (column.size() != col.size())
-			throw new WrongSizeException(col.size(), column.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<? extends V> i = column.iterator();
-		for (Cell<V> c : col.cells()) {
-			old.add(c.get());
-			c.set(i.next());
-		}
-		return old;
-	}
+												WrongSizeException;
 	
 	
 	/**
@@ -475,26 +365,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if column with given index doesn't exist
 	 * @throws WrongSizeException	    if size of passed column doesn't fit table
 	 */
-	public default List<V> replaceColumn(int index, Line<? extends C, ? extends V> column) 
+	public List<V> replaceColumn(int index, Line<? extends C, ? extends V> column) 
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsColumn(index))   
-			throw new NoSuchElementException();
-		Line<C, V> line = getColumn(index);
-		if (column == line)
-			return line.toList();
-		if (line.size() != column.size())
-			throw new WrongSizeException(line.size(), column.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<Cell<V>> ci = line.cells().iterator();
-		for (Cell<? extends V> c : column.cells()) {
-			Cell<V> cell = ci.next();
-			old.add(cell.get());
-			cell.set(c.get());
-		}
-		return old;
-	}
+												WrongSizeException;
 
 	
 	/**
@@ -504,26 +377,9 @@ public interface Table<R, C, V> {
 	 * @throws NoSuchElementException	if column with given index doesn't exist
 	 * @throws WrongSizeException	    if size of passed column doesn't fit table
 	 */
-	public default List<V> replaceColumn(C key, Line<? extends C, ? extends V> column) 
+	public List<V> replaceColumn(C key, Line<? extends C, ? extends V> column) 
 										throws	NoSuchElementException,
-												WrongSizeException {
-		if (!containsColumn(key))   
-			throw new NoSuchElementException();
-		Line<C, V> line = getColumn(key);
-		if (column == line)
-			return line.toList();
-		if (line.size() != column.size())
-			throw new WrongSizeException(line.size(), column.size());
-		
-		List<V> old = new ArrayList<>();
-		Iterator<Cell<V>> ci = line.cells().iterator();
-		for (Cell<? extends V> c : column.cells()) {
-			Cell<V> cell = ci.next();
-			old.add(cell.get());
-			cell.set(c.get());
-		}
-		return old;
-	}
+												WrongSizeException;
 	
 	
 	/**
@@ -544,17 +400,20 @@ public interface Table<R, C, V> {
 	 * Removes the last column and returns its items
 	 * @throws NoSuchElementException if table is empty
 	 */
-	public default List<V> removeLastColumn() throws NoSuchElementException {
-		return removeRow(columnNumber() - 1);
-	}
+	public List<V> removeLastColumn() throws NoSuchElementException;
+	
+	
+	/**
+	 * Removes the first column and returns its items
+	 * @throws NoSuchElementException if table is empty
+	 */
+	public List<V> removeFirstColumn() throws NoSuchElementException;
 	
 	
 	/**
 	 * Returns if table contains column with given index
 	 */
-	public default boolean containsColumn(int index) {
-		return index >= 0 && index < columnNumber();
-	}
+	public boolean containsColumn(int index);
 	
 	
 	/**
@@ -634,9 +493,7 @@ public interface Table<R, C, V> {
 	 * Row stream. 
 	 * Should be used to mutate rows or collect cell values
 	 */
-	public default Stream<Line<R, V>> rowStream() {
-		return StreamSupport.stream(rows().spliterator(), false);
-	}
+	public Stream<Line<R, V>> rowStream();
 	
 	
 	/**
@@ -650,9 +507,7 @@ public interface Table<R, C, V> {
 	 * Row key stream.
 	 * If key for some row is undefined, <tt>next()</tt> returns <tt>null</tt>
 	 */
-	public default Stream<R> rowKeyStream() {
-		return StreamSupport.stream(rowKeys().spliterator(), false);
-	}
+	public Stream<R> rowKeyStream();
 	
 	
 	// column iterators and streams
@@ -675,9 +530,7 @@ public interface Table<R, C, V> {
 	 * Column stream. 
 	 * Should be used to mutate columns or collect cell values
 	 */
-	public default Stream<Line<C, V>> columnStream() {
-		return StreamSupport.stream(columns().spliterator(), false);
-	}
+	public Stream<Line<C, V>> columnStream();
 	
 	
 	/**
@@ -691,65 +544,27 @@ public interface Table<R, C, V> {
 	 * Column key stream.
 	 * If key for some column is undefined, <tt>next()</tt> returns <tt>null</tt>
 	 */
-	public default Stream<C> columnKeyStream() {
-		return StreamSupport.stream(columnKeys().spliterator(), false);
-	}
+	public Stream<C> columnKeyStream();
 	
 	
 	/**
 	 * Cell iterator, returning cells row-by-row. 
 	 * Should be used to mutate cells or collect their values
 	 */
-	public default Iterable<Cell<V>> cells() {
-		return () -> {
-			return new Iterator<Cell<V>>(){
-
-				Iterator<Line<R, V>> ri = rows().iterator();
-				int n = rowNumber();
-				boolean empty = n == 0;
-				
-				Iterator<Cell<V>> ci = empty ? null : ri.next().iterator();
-				
-				@Override
-				public boolean hasNext() {
-					return !empty && (ci.hasNext() || ri.hasNext());
-				}
-
-				@Override
-				public Cell<V> next() {
-					if (!hasNext())
-						throw new NoSuchElementException();
-					if (!ci.hasNext()) 
-						ci = ri.next().iterator();
-					return ci.next();
-				}
-				
-			};
-		};
-	}
+	public Iterable<Cell<V>> cells();
 	
 	
 	/**
 	 * Cell value iterator, returning cell values row-by-row
 	 */
-	public default Iterable<V> cellValues() {
-		return () -> {
-			Iterator<Cell<V>> i = cells().iterator();
-			return new Iterator<V>() {
-				@Override public boolean hasNext() { return i.hasNext(); }
-				@Override public V next()          { return i.next().get(); }
-			};
-		};
-	}
+	public Iterable<V> cellValues();
 	
 	
 	/**
 	 * Cell stream, returning cells row-by-row. 
 	 * Should be used to mutate cells or collect their values
 	 */
-	public default Stream<Cell<V>> cellStream() {
-		return StreamSupport.stream(cells().spliterator(), false);
-	}
+	public Stream<Cell<V>> cellStream();
 	
 	
 	
@@ -761,24 +576,13 @@ public interface Table<R, C, V> {
 	 * Returns list of lists of cell values in row default order 
 	 * (as returned by row stream)
 	 */
-	public default List<List<V>> toRowCellsList() {
-		return rowStream().map(Line::toList).collect(toList());
-	}
+	public List<List<V>> toRowCellsList();
 	
 	
 	/**
 	 * Returns map <tt>(key -> List(cell value))</tt> for rows with non-null key	
 	 */
-	public default Map<R, List<V>> toRowCellsMap() {
-		Map<R, List<V>> map = new HashMap<>();
-		int i = 0;
-		for (Line<R, V> line : rows()) {
-			R key = getRowKey(i++);
-			if (key != null)
-				map.put(key, line.toList());
-		}
-		return map;
-	}
+	public Map<R, List<V>> toRowCellsMap();
 	
 	
 	// column-by-column converters
@@ -787,24 +591,13 @@ public interface Table<R, C, V> {
 	 * Returns list of lists of cell values in column default order 
 	 * (as returned by column stream)
 	 */
-	public default List<List<V>> toColumnCellsList() {
-		return columnStream().map(Line::toList).collect(toList());
-	}
+	public List<List<V>> toColumnCellsList();
 	
 	
 	/**
 	 * Returns map <tt>(key -> List(cell value))</tt> for columns with non-null key	
 	 */
-	public default Map<C, List<V>> toColumnCellsMap() {
-		Map<C, List<V>> map = new HashMap<>();
-		int i = 0;
-		for (Line<C, V> line : columns()) {
-			C key = getColumnKey(i++);
-			if (key != null)
-				map.put(key, line.toList());
-		}
-		return map;
-	} 
+	public Map<C, List<V>> toColumnCellsMap();
 	
 	
 	

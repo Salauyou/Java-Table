@@ -3,7 +3,6 @@ package ru.salauyou.table;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public interface Line<K, V> extends Iterable<Cell<V>> {
 	
@@ -27,9 +26,7 @@ public interface Line<K, V> extends Iterable<Cell<V>> {
 	
 	public Iterable<Cell<V>> cells(boolean reversed);
 	
-	public default Stream<Cell<V>> stream() {
-		return StreamSupport.stream(cells().spliterator(), false);
-	}
+	public Stream<Cell<V>> stream();
 	
 	
 	/* ---------------------- converters -------------------------- */
