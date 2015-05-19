@@ -8,8 +8,9 @@
 
 `LinkedTable` -- table implementation based on 4-linked cells: 
 
-- Each CRUD operation on entire row/column costs *O(k + m)*, where *k* and *m* are table dimensions
-- Iterator `hasNext()` and `next()` cost *O(1)* for any direction of traversal
+- `addRow()`, `addColumn()`, `replaceRow()`, `replaceColumn()` cost *O(k)* or *O(m)*, where *k* and *m* are table dimensions
+- `insertRow()`, `insertColumn()`, `removeRow()`, `removeColumn()` cost *O(k + m)*
+- `hasNext()`, `next()` cost *O(1)* for all direct and reversed iterators
 - Row/column access by index costs *O(1)*, by key--at most *O(k)* or *O(m)*
 - Cell random access by index costs *O(min(k, m))*, by key--at most *O(k + m)*
 
