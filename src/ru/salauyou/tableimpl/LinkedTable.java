@@ -452,7 +452,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         checkIndex(row, true);
         checkIndex(column, false);
         // TODO implement
-        return null;
+        throw new UnsupportedOperationException();
     }
 
 
@@ -462,7 +462,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         checkKey(rowKey, true);
         checkKey(columnKey, false);
         // TODO implement
-        return null;
+        throw new UnsupportedOperationException();
     }
     
     
@@ -620,12 +620,17 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         boolean first = index == 0;
         boolean last = index == ((isRow ? rows.size() : cols.size()) - 1);
         LinkedLine<?, V> line = isRow ? rows.get(index) : cols.get(index);
-        LinkedCell<V> n = line.first;
+        
+        // assign size and detach from table
+        line.size = isRow ? cols.size() : rows.size();
+        line.table = null;                   
+        
+        LinkedCell<V> c = line.first;
         
         if (first && last) {                  // only one line exists
-            while (n != null) {
-                old.add(n.get());
-                n = isRow ? n.r : n.d;    
+            while (c != null) {
+                old.add(c.get());
+                c = isRow ? c.r : c.d;    
             }
             rows.clear();
             cols.clear();
@@ -634,31 +639,31 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
             
         } else {                              // more than one line exist
             for (int i = 0; i < (isRow ? cols.size() : rows.size()); i++) {        
-                old.add(n.get());
+                old.add(c.get());
                 
                 if (isRow) {
                     if (first) 
-                        cols.get(i).first = n.d;
+                        cols.get(i).first = c.d;
                     if (last) 
-                        cols.get(i).last = n.u;
-                    if (n.u != null)          // relink
-                        n.u.d = n.d;
-                    if (n.d != null)
-                        n.d.u = n.u;
-                    n.d = n.u = null;         // clear side links
-                    n = n.r;
+                        cols.get(i).last = c.u;
+                    if (c.u != null)          // relink
+                        c.u.d = c.d;
+                    if (c.d != null)
+                        c.d.u = c.u;
+                    c.d = c.u = null;         // clear side links
+                    c = c.r;
                     
                 } else {
                     if (first)
-                        rows.get(i).first = n.r;
+                        rows.get(i).first = c.r;
                     if (last)
-                        rows.get(i).last = n.f;
-                    if (n.f != null)          // relink
-                        n.f.r = n.r;
-                    if (n.r != null)
-                        n.r.f = n.f;
-                    n.r = n.f = null;         // clear side links
-                    n = n.d;
+                        rows.get(i).last = c.f;
+                    if (c.f != null)          // relink
+                        c.f.r = c.r;
+                    if (c.r != null)
+                        c.r.f = c.f;
+                    c.r = c.f = null;         // clear side links
+                    c = c.d;
                 }
             }
             
@@ -878,6 +883,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         K key;
         int weakIndex;
         LinkedTable<?, ?, V> table;
+        int size = -1;              // to assign only when line is detached
         
         
         LinkedLine(LineType type, LinkedCell<V> first, LinkedCell<V> last, K key, 
@@ -970,7 +976,10 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         
         @Override
         public int size() {
-            return type == LineType.ROW ? table.cols.size() : table.rows.size();
+        	if (table == null)
+        		return size;
+        	else
+        		return type == LineType.ROW ? table.cols.size() : table.rows.size();
         }
         
 
