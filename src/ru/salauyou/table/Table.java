@@ -22,13 +22,13 @@ public interface Table<R, C, V> {
     /**
      * Number of rows in table
      */
-    public int rowNumber();
+    public int width();
 
     
     /**
      * Number of columns in table
      */
-    public int columnNumber();
+    public int height();
 
     
     

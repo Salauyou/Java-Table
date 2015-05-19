@@ -81,14 +81,14 @@ public final class LinkedTable<R, C, V> extends AbstractTable<R, C, V>
     
     
     @Override
-    public int rowNumber() {
+    public int width() {
         return rows.size();
     }
     
     
     
     @Override
-    public int columnNumber() {
+    public int height() {
         return cols.size();
     }
     

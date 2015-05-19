@@ -34,7 +34,21 @@ public abstract class AbstractTable<R, C, V> implements Table<R, C, V> {
     
 
     
-    // should be overrided by underlying implementation to avoid list creation
+    /* --------------------- column accessors and updaters -------------------- */
+	
+	
+	// should be overrided by underlying implementation to avoid list creation
+	@Override
+	public Table<R, C, V> addColumn(C key, Line<? extends C, ? extends V> column)
+	                                    throws IllegalArgumentException,
+	                                           WrongSizeException {
+	    addColumn(key, column.toList());
+	    return this;
+	}
+
+
+
+	// should be overrided by underlying implementation to avoid list creation
     @Override
     public Table<R, C, V> insertRow(int index, R key, Line<? extends R, ? extends V> row)
                                         throws IllegalArgumentException,
@@ -46,57 +60,136 @@ public abstract class AbstractTable<R, C, V> implements Table<R, C, V> {
 
     
     
-    @Override
+    /* --------------------- column accessors and updaters -------------------- */
+	
+	
+	// should be overrided by underlying implementation to avoid list creation
+	@Override
+	public Table<R, C, V> insertColumn(int index, C key, Line<? extends C, ? extends V> column)
+	                                    throws IllegalArgumentException,
+	                                           NoSuchElementException,
+	                                           WrongSizeException {
+	    insertColumn(index, key, column.toList());
+	    return this;
+	}
+
+
+
+	@Override
     public List<V> replaceRow(int index, Collection<? extends V> row) 
                                         throws  NoSuchElementException,
                                                 WrongSizeException {
         checkIndex(index, true);
-        Line<R, V> rw = getRow(index);
-        checkSize(row.size(), rw.size());
-        return replaceValues(rw, row, null);
+        Line<R, V> line = getRow(index);
+        checkSize(row.size(), line.size());
+        return replaceValues(line, row, null);
     }
     
     
-    @Override
+    /* --------------------- column accessors and updaters -------------------- */
+	
+	
+	@Override
+	public List<V> replaceColumn(int index, Collection<? extends V> column) 
+	                                    throws  NoSuchElementException,
+	                                            WrongSizeException {
+	    checkIndex(index, false);
+	    Line<C, V> col = getColumn(index);
+	    checkSize(column.size(), col.size());
+	    return replaceValues(col, column, null);
+	}
+
+
+
+	@Override
     public List<V> replaceRow(R key, Collection<? extends V> row)
                                         throws  NoSuchElementException,
                                                 WrongSizeException {
         checkKey(key, true);
-        Line<R, V> rw = getRow(key);
-        checkSize(row.size(), rw.size());
-        return replaceValues(rw, row, null);
+        Line<R, V> line = getRow(key);
+        checkSize(row.size(), line.size());
+        return replaceValues(line, row, null);
     }
     
     
-    @Override
+    /* --------------------- column accessors and updaters -------------------- */
+	
+	
+	@Override
+	public List<V> replaceColumn(C key, Collection<? extends V> column)
+	                                    throws  NoSuchElementException,
+	                                            WrongSizeException {
+	    checkKey(key, false);
+	    Line<C, V> line = getColumn(key);
+	    checkSize(column.size(), line.size());
+	    return replaceValues(line, column, null);
+	}
+
+
+
+	@Override
     public List<V> replaceRow(int index, Line<? extends R, ? extends V> row) 
                                         throws  NoSuchElementException,
                                                 WrongSizeException {
         checkIndex(index, true);
-        Line<R, V> rw = getRow(index);
-        if (row == rw)
-            return rw.toList();
-        checkSize(row.size(), rw.size());
-        return replaceValues(rw, null, row);
+        Line<R, V> line = getRow(index);
+        if (row == line)
+            return line.toList();
+        checkSize(row.size(), line.size());
+        return replaceValues(line, null, row);
     }
 
     
-    @Override
+    /* --------------------- column accessors and updaters -------------------- */
+	
+	
+	@Override
+	public List<V> replaceColumn(int index, Line<? extends C, ? extends V> column) 
+	                                    throws  NoSuchElementException,
+	                                            WrongSizeException {
+	    checkIndex(index, false);
+	    Line<C, V> line = getColumn(index);
+	    if (column == line)
+	        return line.toList();
+	    checkSize(line.size(), column.size());
+	    return replaceValues(line, null, column);
+	}
+
+
+
+	@Override
     public List<V> replaceRow(R key, Line<? extends R, ? extends V> row) 
                                         throws  NoSuchElementException,
                                                 WrongSizeException {
         checkKey(key, true);
-        Line<R, V> rw = getRow(key);
-        if (row == rw)
-            return rw.toList();
-        checkSize(row.size(), rw.size());
-        return replaceValues(rw, null, row);
+        Line<R, V> line = getRow(key);
+        if (row == line)
+            return line.toList();
+        checkSize(row.size(), line.size());
+        return replaceValues(line, null, row);
     }
     
     
-    @Override
+    /* --------------------- column accessors and updaters -------------------- */
+	
+	
+	@Override
+	public List<V> replaceColumn(C key, Line<? extends C, ? extends V> column) 
+	                                    throws  NoSuchElementException,
+	                                            WrongSizeException {
+	    checkKey(key, false);
+	    Line<C, V> line = getColumn(key);
+	    if (column == line)
+	        return line.toList();
+	    checkSize(line.size(), column.size());
+	    return replaceValues(line, null, column);
+	}
+
+
+
+	@Override
     public boolean containsRow(int index) {
-        return index >= 0 && index < rowNumber();
+        return index >= 0 && index < width();
     }
     
 
@@ -104,78 +197,9 @@ public abstract class AbstractTable<R, C, V> implements Table<R, C, V> {
     /* --------------------- column accessors and updaters -------------------- */
     
     
-    // should be overrided by underlying implementation to avoid list creation
-    @Override
-    public Table<R, C, V> addColumn(C key, Line<? extends C, ? extends V> column)
-                                        throws IllegalArgumentException,
-                                               WrongSizeException {
-        addColumn(key, column.toList());
-        return this;
-    }
-    
-    
-    // should be overrided by underlying implementation to avoid list creation
-    @Override
-    public Table<R, C, V> insertColumn(int index, C key, Line<? extends C, ? extends V> column)
-                                        throws IllegalArgumentException,
-                                               NoSuchElementException,
-                                               WrongSizeException {
-        insertColumn(index, key, column.toList());
-        return this;
-    }
-    
-
-    @Override
-    public List<V> replaceColumn(int index, Collection<? extends V> column) 
-                                        throws  NoSuchElementException,
-                                                WrongSizeException {
-        checkIndex(index, false);
-        Line<C, V> col = getColumn(index);
-        checkSize(column.size(), col.size());
-        return replaceValues(col, column, null);
-    }
-    
-    
-    @Override
-    public List<V> replaceColumn(C key, Collection<? extends V> column)
-                                        throws  NoSuchElementException,
-                                                WrongSizeException {
-        checkKey(key, false);
-        Line<C, V> line = getColumn(key);
-        checkSize(column.size(), line.size());
-        return replaceValues(line, column, null);
-    }
-    
-    
-    @Override
-    public List<V> replaceColumn(int index, Line<? extends C, ? extends V> column) 
-                                        throws  NoSuchElementException,
-                                                WrongSizeException {
-        checkIndex(index, false);
-        Line<C, V> line = getColumn(index);
-        if (column == line)
-            return line.toList();
-        checkSize(line.size(), column.size());
-        return replaceValues(line, null, column);
-    }
-
-    
-    @Override
-    public List<V> replaceColumn(C key, Line<? extends C, ? extends V> column) 
-                                        throws  NoSuchElementException,
-                                                WrongSizeException {
-        checkKey(key, false);
-        Line<C, V> line = getColumn(key);
-        if (column == line)
-            return line.toList();
-        checkSize(line.size(), column.size());
-        return replaceValues(line, null, column);
-    }
-    
-    
     @Override
     public boolean containsColumn(int index) {
-        return index >= 0 && index < columnNumber();
+        return index >= 0 && index < height();
     }
     
     
@@ -225,7 +249,7 @@ public abstract class AbstractTable<R, C, V> implements Table<R, C, V> {
             return false;
         
         Table t = (Table) o;
-        if (t.rowNumber() != rowNumber() || t.columnNumber() != columnNumber())
+        if (t.width() != width() || t.height() != height())
             return false;
         
         Iterator i = rowKeys().iterator();                // compare row keys
@@ -254,16 +278,16 @@ public abstract class AbstractTable<R, C, V> implements Table<R, C, V> {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Rows: ").append(rowNumber());
-        if (rowNumber() > 0) {
+        sb.append("Rows: ").append(width());
+        if (width() > 0) {
             sb.append(' ').append('{');
             for (R key : rowKeys()) {
                 sb.append(key).append(',').append(' ');
             }
             sb.delete(sb.length() - 2, sb.length()).append('}');
         }
-        sb.append("\nColumns: ").append(columnNumber());
-        if (columnNumber() > 0) {
+        sb.append("\nColumns: ").append(height());
+        if (height() > 0) {
             sb.append(' ').append('{');
             for (C key : columnKeys()) {
                 sb.append(key).append(',').append(' ');
@@ -287,13 +311,13 @@ public abstract class AbstractTable<R, C, V> implements Table<R, C, V> {
     
     
     protected void checkIndex(int index, boolean isRow) {
-        if (index < 0 || (isRow && index >= rowNumber()) 
-                || (!isRow && index >= columnNumber()))
+        if (index < 0 || (isRow && index >= width()) 
+                || (!isRow && index >= height()))
             throw new NoSuchElementException (
                     String.format("Out of bounds: index=%d, %s=%d",
                             index, 
                             isRow ? "rows" : "columns", 
-                            isRow ? rowNumber() : columnNumber()
+                            isRow ? width() : height()
                             ));
     }
     
@@ -385,7 +409,7 @@ public abstract class AbstractTable<R, C, V> implements Table<R, C, V> {
             return new Iterator<Cell<V>>(){
 
                 Iterator<Line<R, V>> ri = rows().iterator();
-                int n = rowNumber();
+                int n = width();
                 boolean empty = n == 0;
                 
                 Iterator<Cell<V>> ci = empty ? null : ri.next().iterator();
