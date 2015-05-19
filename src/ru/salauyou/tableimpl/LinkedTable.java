@@ -18,7 +18,8 @@ import ru.salauyou.table.WrongSizeException;
 
 
 
-public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Serializable {
+public final class LinkedTable<R, C, V> extends AbstractTable<R, C, V> 
+                                        implements Serializable {
     
     private static final long serialVersionUID = 6939482161443314381L;
 
@@ -48,6 +49,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     }
     
     
+    
     public LinkedTable(int rows, int columns, V defaultValue) {
         List<V> one = Arrays.asList(defaultValue);
         for (int i = 0; i < columns; i++)
@@ -58,11 +60,13 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     }
     
     
+    
     /**
      * Creates empty (cell values filled with nulls) <tt>LinkedTable</tt> 
      * which have rows and columns defined by key collections
      */
-    public LinkedTable(Collection<? extends R> rowKeys, Collection<? extends C> columnKeys, V defaultValue) {
+    public LinkedTable(Collection<? extends R> rowKeys, 
+    		           Collection<? extends C> columnKeys, V defaultValue) {
         this(rowKeys.size(), columnKeys.size(), defaultValue);
         int i = 0;
         for (R key : rowKeys) {
@@ -126,7 +130,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
 
     @Override
-    public Table<R, C, V> addRow(Collection<? extends V> row) throws WrongSizeException {
+    public Table<R, C, V> addRow(Collection<? extends V> row) 
+    		                                  throws WrongSizeException {
         if (row != null && row.size() != 0)
             checkSize(row.size(), true);
         return addRow(null, row);
@@ -135,7 +140,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     
     
     @Override
-    public Table<R, C, V> addColumn(Collection<? extends V> column) throws WrongSizeException {
+    public Table<R, C, V> addColumn(Collection<? extends V> column) 
+    		                                  throws WrongSizeException {
         if (column != null && column.size() != 0)
             checkSize(column.size(), false);
         return addColumn(null, column);
@@ -145,7 +151,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
     @Override
     public Table<R, C, V> addRow(R key, Collection<? extends V> row)
-                                         throws IllegalArgumentException, WrongSizeException {
+                                              throws IllegalArgumentException, 
+                                                     WrongSizeException {
         if (row != null && row.size() != 0)
             checkSize(row.size(), true);
         checkKeyNotDuplicate(key, true);
@@ -158,7 +165,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     
     @Override
     public Table<R, C, V> addColumn(C key, Collection<? extends V> column)
-                                     throws IllegalArgumentException, WrongSizeException {
+                                              throws IllegalArgumentException,
+                                                     WrongSizeException {
         if (column != null && column.size() != 0)
             checkSize(column.size(), false);
         checkKeyNotDuplicate(key, false);
@@ -171,7 +179,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
     @Override
     public Table<R, C, V> addRow(R key, Line<? extends R, ? extends V> row)
-                                         throws IllegalArgumentException, WrongSizeException {
+                                              throws IllegalArgumentException, 
+                                                     WrongSizeException {
         if (row != null && row.size() != 0)
             checkSize(row.size(), true);
         checkKeyNotDuplicate(key, true);
@@ -184,7 +193,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     
     @Override
     public Table<R, C, V> addColumn(C key, Line<? extends C, ? extends V> column)
-                                             throws IllegalArgumentException, WrongSizeException {
+                                              throws IllegalArgumentException, 
+                                                     WrongSizeException {
         if (column != null && column.size() != 0)
             checkSize(column.size(), false);
         checkKeyNotDuplicate(key, false);
@@ -197,7 +207,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
     @Override
     public Table<R, C, V> insertRow(int index, Collection<? extends V> row)
-                                             throws NoSuchElementException, WrongSizeException {
+                                              throws NoSuchElementException, 
+                                                     WrongSizeException {
         if (row != null && row.size() != 0)
             checkSize(row.size(), true);
         insertLine(index, null, row == null ? null : row.iterator(), 
@@ -209,7 +220,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
     @Override
     public Table<R, C, V> insertColumn(int index, Collection<? extends V> column)
-                                             throws NoSuchElementException, WrongSizeException {
+                                              throws NoSuchElementException, 
+                                                     WrongSizeException {
         if (column != null && column.size() != 0)
             checkSize(column.size(), false);
         insertLine(index, null, column == null ? null : column.iterator(), 
@@ -221,8 +233,9 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
     @Override
     public Table<R, C, V> insertRow(int index, R key, Collection<? extends V> row) 
-                                             throws IllegalArgumentException, NoSuchElementException, 
-                                                    WrongSizeException {
+                                              throws IllegalArgumentException, 
+                                                     NoSuchElementException, 
+                                                     WrongSizeException {
         if (row != null && row.size() != 0)
             checkSize(row.size(), true);
         checkKeyNotDuplicate(key, true);
@@ -235,8 +248,9 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         
     @Override
     public Table<R, C, V> insertColumn(int index, C key, Collection<? extends V> column) 
-                                             throws IllegalArgumentException, NoSuchElementException, 
-                                                    WrongSizeException {
+                                              throws IllegalArgumentException, 
+                                                     NoSuchElementException, 
+                                                     WrongSizeException {
         if (column != null && column.size() != 0)
             checkSize(column.size(), false);
         checkKeyNotDuplicate(key, false);
@@ -249,8 +263,9 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
     @Override
     public Table<R, C, V> insertRow(int index, R key, Line<? extends R, ? extends V> row)
-                                             throws IllegalArgumentException, NoSuchElementException,
-                                                    WrongSizeException {
+                                              throws IllegalArgumentException, 
+                                                     NoSuchElementException,
+                                                     WrongSizeException {
         if (row != null && row.size() != 0)
             checkSize(row.size(), true);
         checkKeyNotDuplicate(key, true);
@@ -263,8 +278,9 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     
     @Override
     public Table<R, C, V> insertColumn(int index, C key, Line<? extends C, ? extends V> column)
-                                             throws IllegalArgumentException, NoSuchElementException,
-                                                    WrongSizeException {
+                                              throws IllegalArgumentException, 
+                                                     NoSuchElementException,
+                                                     WrongSizeException {
         if (column != null && column.size() != 0)
             checkSize(column.size(), false);
         checkKeyNotDuplicate(key, false);
@@ -382,7 +398,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
 
     @Override
-    public R setRowKey(int index, R key) throws NoSuchElementException, IllegalArgumentException {
+    public R setRowKey(int index, R key) throws NoSuchElementException, 
+                                                IllegalArgumentException {
         checkIndex(index, true);
         LinkedLine<R, V> row = rows.get(index);
         if (Objects.equals(row.key, key))
@@ -471,7 +488,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     // inner checking methods
     
     
-    private void checkKeyNotDuplicate(Object key, boolean isRow) throws IllegalArgumentException {
+    void checkKeyNotDuplicate(Object key, boolean isRow) 
+    		                                  throws IllegalArgumentException {
         if (key == null)
             return;
         if ((isRow && rowMap != null && rowMap.containsKey(key)) 
@@ -480,7 +498,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     }
     
     
-    private void checkSize(int size, boolean isRow) throws WrongSizeException {
+    void checkSize(int size, boolean isRow) throws WrongSizeException {
         if (isRow && cols.size() > 0 && size != cols.size())
             throw new WrongSizeException(cols.size(), size);
         if (!isRow && rows.size() > 0 && size != rows.size())
@@ -493,7 +511,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     // Cost is always O(k + m)
     
     @SuppressWarnings("unchecked")
-    void insertLine(int index, Object key, Iterator<? extends V> line, int lineSize, boolean isRow) {
+    void insertLine(int index, Object key, Iterator<? extends V> line, 
+    		        int lineSize, boolean isRow) {
         
         boolean lineEmpty = (line == null || lineSize == 0);
         boolean tableEmpty = rows.size() == 0;        
@@ -510,8 +529,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         int size = lineEmpty ? (isRow ? cols.size() : rows.size()) : lineSize;
         
         // new line
-        LinkedLine<?, V> newLine = new LinkedLine<>(isRow == true ? LineType.ROW : LineType.COLUMN, 
-                                                    null, null, key, index, this);
+        LinkedLine<?, V> newLine = new LinkedLine<>(isRow, null, null, key, index, this);
         
         LinkedCell<V> prev = null;    // previous cell
         LinkedCell<V> right;          // cell right to the current as seen in direction of traversal
@@ -538,52 +556,52 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         // main loop
         for (int i = 0; i < size; i++) {
             V value = iv == null ? null : iv.next();            
-            LinkedCell<V> n = isRow ? new LinkedCell<>(left, right, prev, null, value)
+            LinkedCell<V> c = isRow ? new LinkedCell<>(left, right, prev, null, value)
                                     : new LinkedCell<>(prev, null, right, left, value);
             if (isRow) {
                 if (prev != null)
-                    prev.r = n;
+                    prev.r = c;
                 if (right != null)
-                    right.u = n;
+                    right.u = c;
                 if (left != null)
-                    left.d = n;
+                    left.d = c;
                 left = left == null ? null : left.r;
                 right = right == null ? null : right.r;
-                prev = n;
+                prev = c;
             } else {
                 if (prev != null)
-                    prev.d = n;
+                    prev.d = c;
                 if (right != null)
-                    right.r = n;
+                    right.r = c;
                 if (left != null)
-                    left.f = n;
+                    left.f = c;
                 left = left == null ? null : left.d;
                 right = right == null ? null : right.d;
-                prev = n;
+                prev = c;
             }
             
             if (i == 0)
-                newLine.first = n;
+                newLine.first = c;
             if (i == size - 1)
-                newLine.last = n;
+                newLine.last = c;
             
             if (tableEmpty) {                  // line is inserted into empty table
                 if (isRow)
-                    cols.add(new LinkedLine<>(LineType.COLUMN, n, n, null, i, this));
+                    cols.add(new LinkedLine<>(false, c, c, null, i, this));
                 else
-                    rows.add(new LinkedLine<>(LineType.ROW, n, n, null, i, this));
+                    rows.add(new LinkedLine<>(true, c, c, null, i, this));
                 
             } else if (lineFirst) {            // reassign first cell
                 if (isRow)
-                    cols.get(i).first = n;
+                    cols.get(i).first = c;
                 else
-                    rows.get(i).first = n;
+                    rows.get(i).first = c;
                 
             } else if (lineLast) {             // reassign last cell
                 if (isRow)
-                    cols.get(i).last = n;
+                    cols.get(i).last = c;
                 else
-                    rows.get(i).last = n;
+                    rows.get(i).last = c;
             }
                 
         }
@@ -613,7 +631,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     // Removes row or column by given index and removes key association 
     // Cost is always O(k + m)
     
-    private List<V> removeAndReturn(int index, boolean isRow) {
+    List<V> removeAndReturn(int index, boolean isRow) {
         
         List<V> old = new ArrayList<>(isRow ? cols.size() : rows.size());
         
@@ -869,28 +887,29 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     
     
     
-    enum LineType implements Serializable { ROW, COLUMN };
+    //enum LineType implements Serializable { ROW, COLUMN };
     
     
     /** Represents a single row or column */
-    static class LinkedLine<K, V> extends AbstractLine<K, V> implements Serializable {
+    private static class LinkedLine<K, V> extends AbstractLine<K, V> 
+                                  implements Serializable {
         
         private static final long serialVersionUID = -2644441702340616775L;
         
+        boolean isRow;
         LinkedCell<V> first;
         LinkedCell<V> last;
-        LineType type;
         K key;
         int weakIndex;
         LinkedTable<?, ?, V> table;
         int size = -1;              // to assign only when line is detached
         
         
-        LinkedLine(LineType type, LinkedCell<V> first, LinkedCell<V> last, K key, 
-                   int weakIndex, LinkedTable<?, ?, V> table) {
+        LinkedLine(boolean isRow, LinkedCell<V> first, LinkedCell<V> last, 
+        		   K key, int weakIndex, LinkedTable<?, ?, V> table) {
             this.first = first;
             this.last = last;
-            this.type = type;
+            this.isRow = isRow;
             this.key = key;
             this.weakIndex = weakIndex;
             this.table = table;
@@ -919,11 +938,11 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         
         @Override
         public List<V> toList() {
-            LinkedCell<V> n = first;
+            LinkedCell<V> c = first;
             List<V> res = new ArrayList<>();
-            while (n != null) {
-                res.add(n.get());
-                n = type == LineType.ROW ? n.r : n.d;
+            while (c != null) {
+                res.add(c.get());
+                c = isRow ? c.r : c.d;
             }
             return res;
         }
@@ -949,24 +968,24 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
 
         @Override
         public Cell<V> getCell(int index) throws NoSuchElementException {
-            LinkedCell<V> n = (LinkedCell<V>) firstCell();
+            LinkedCell<V> c = (LinkedCell<V>) firstCell();
             for (int i = 0; i < index; i++) {
-                if (type == LineType.ROW ? n.r == null : n.d == null) 
+                if (isRow ? c.r == null : c.d == null) 
                     throw new NoSuchElementException();
                 else 
-                    n = type == LineType.ROW ? n.r : n.d;
+                    c = isRow ? c.r : c.d;
             }
-            return n;
+            return c;
         }
         
         
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder(type == LineType.ROW ? "R[" : "C[");
-            LinkedCell<V> n = first;
-            while (n != null) {
-                sb.append(n.value).append(',').append(' ');
-                n = type == LineType.ROW ? n.r : n.d;
+            StringBuilder sb =  new StringBuilder(isRow ? "R[" : "C[");
+            LinkedCell<V> c = first;
+            while (c != null) {
+                sb.append(c.value).append(',').append(' ');
+                c = isRow ? c.r : c.d;
             }
             if (sb.length() > 2)
                 sb.delete(sb.length() - 2, sb.length());
@@ -979,29 +998,29 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         	if (table == null)
         		return size;
         	else
-        		return type == LineType.ROW ? table.cols.size() : table.rows.size();
+        		return isRow ? table.cols.size() : table.rows.size();
         }
         
 
         Iterator<Cell<V>> iterator(boolean reversed) {
             return new Iterator<Cell<V>>() {
-                LinkedCell<V> n = reversed ? last : first;
+                LinkedCell<V> c = reversed ? last : first;
                 
                 @Override
                 public boolean hasNext() {
-                    return n != null;
+                    return c != null;
                 }
 
                 @Override
                 public Cell<V> next() {
-                    if (n == null)
+                    if (c == null)
                         throw new NoSuchElementException();
-                    LinkedCell<V> c = n;
-                    if (type == LineType.ROW) 
-                        n = reversed ? n.f : n.r;
+                    LinkedCell<V> cc = c;
+                    if (isRow) 
+                        c = reversed ? c.f : c.r;
                     else
-                        n = reversed ? n.u : n.d;
-                    return c;
+                        c = reversed ? c.u : c.d;
+                    return cc;
                 }
             };
         }
@@ -1012,7 +1031,7 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
     /** ----------------- LinkedCell class ------------------ **/
     
     
-    public static class LinkedCell<T> implements Cell<T>, Serializable {
+    private static class LinkedCell<T> implements Cell<T>, Serializable {
         
         private static final long serialVersionUID = -1363494083583791405L;
         
@@ -1026,7 +1045,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         
         T value;
         
-        LinkedCell(LinkedCell<T> u, LinkedCell<T> d, LinkedCell<T> f, LinkedCell<T> r, T value) {
+        LinkedCell(LinkedCell<T> u, LinkedCell<T> d, 
+        		   LinkedCell<T> f, LinkedCell<T> r, T value) {
             this.u = u;
             this.d = d;
             this.r = r;
@@ -1049,7 +1069,8 @@ public class LinkedTable<R, C, V> extends AbstractTable<R, C, V> implements Seri
         
         @Override
         public String toString() {
-            return String.format("Cell [%03d]: u=%03d, d=%03d, f=%03d, r=%03d, value=%s", id, 
+            return String.format("Cell [%03d]: u=%03d, d=%03d, f=%03d, r=%03d, value=%s", 
+            		              id, 
                                   (u == null ? 0 : u.id), (d == null ? 0 : d.id), 
                                   (f == null ? 0 : f.id), (r == null ? 0 : r.id),
                                   value
