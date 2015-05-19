@@ -12,5 +12,5 @@
 - Row/column access by index costs *O(1)*, by key--at most *O(k)* or *O(m)*
 - Cell random access by index costs *O(min(k, m))*, by key--at most *O(k + m)*
 
-------------------
-All implementations are in progress. Current source code is available on [branch devel]( https://github.com/Salauyou/Java-Table/tree/devel).
+
+**All implementations are in progress.** Current source code is available on [branch devel]( https://github.com/Salauyou/Java-Table/tree/devel).
