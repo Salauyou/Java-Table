@@ -2,7 +2,7 @@
 2D-table interface and implementation
 
 ---
-`Table` -- common interface to represent, access and manipulate mutable 2D table, mainly by entire rows and columns. It includes all row/column CRUD operations: `addRow()`, `addColumn()` `insertRow()`, `insertColumn()`, `removeRow()`, `removeColumn()`, `replaceRow()`, `replaceColumn()`. Row, column, cell iterators in direct and reverse order are supported, as well as streams and converters from/to standard Java collections.
+`Table` -- common interface to represent, access and manipulate mutable 2D table, mainly by entire rows and columns. It includes all row/column CRUD operations. Row, column, cell iterators in direct and reverse order are supported, as well as streams and converters from/to standard Java collections.
 
 ---
 
